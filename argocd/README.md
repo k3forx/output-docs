@@ -259,8 +259,57 @@ spec:
     namespace: server
 ```
 
-Create the application with `kubectl` command.
+Inside `demo/nginx` directory, you create a `pod.yaml` to deploy nginx container in `server` namespace. After that, let's create the application with `kubectl` command.
 
 ```bash
 > kubectl apply -f demo/nginx.yaml
 ```
+
+You can see that the application is successfully created.
+
+![image](https://user-images.githubusercontent.com/45956169/115148427-7c8daf00-a09a-11eb-82a7-104a767d1cd7.png)
+
+## Let's "sync"!
+
+You created `nginx` application, but the status of the application is `OutOfSync`. This means that there is difference between the YAML file on GitHub repository and actual state on Kubernetes.
+
+In GitHub repository, there is a YAML file to run a nginx pod. However, no pods are running on Kubernetes as you can see with the following command. By `OutOfSync`, Argo CD tells us that YAML files under `demo/nginx` directory are **NOT** reflected!
+
+```bash
+> kubectl get pod -n server
+No resources found in server namespace.
+```
+
+You can remove the difference with `sync` operation. Click the application and `SYNC` and `SYNCHRONIZE` button.
+
+<img width="1920" alt="貼り付けた画像_2021_04_18_23_16" src="https://user-images.githubusercontent.com/45956169/115148823-4cdfa680-a09c-11eb-8b59-6847b9954068.png">
+
+After a few seconds...
+
+<img width="1260" alt="貼り付けた画像_2021_04_18_23_19" src="https://user-images.githubusercontent.com/45956169/115148912-8b756100-a09c-11eb-9a11-9041b32efa2e.png">
+
+Successfully synced!
+
+You can see that `nginx` pod is running.
+
+```bash
+> kubectl get pod -n server
+NAME    READY   STATUS    RESTARTS   AGE
+nginx   1/1     Running   0          72s
+```
+
+## Auto Sync
+
+If you want Argo CD to sync applications whenever a new commit is created in the `source`. You can enable the feature of auto sync with `APP DETAILS` and `ENABLE AUTO-SYNC` buttons.
+
+<img width="1920" alt="貼り付けた画像_2021_04_18_23_37" src="https://user-images.githubusercontent.com/45956169/115149463-3f77eb80-a09f-11eb-9190-22a61aae6ed1.png">
+
+### SelfHeal
+
+What happens if you delete the pod by `kubectl` command?
+
+```bash
+> kubectl delete pod -n server nginx
+```
+
+The status of the application is back to `OutOfSync`. Let's enable `SELF HEAL` feature so that Argo CD automatically deploy a new application by themselves.
