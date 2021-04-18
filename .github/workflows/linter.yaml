@@ -1,0 +1,17 @@
+name: linter
+
+on:
+  pull_request:
+    paths-ignore:
+      - ".*"
+      - "*/.*"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: npm install prettier@2.1.2
+      - name: prettier
+        run: npx prettier --check .
