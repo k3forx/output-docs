@@ -8,7 +8,7 @@ spec:
 
   source:
     repoURL: https://github.com/k3forx/output-docs
-    targetRevision: master
+    targetRevision: main
     path: argocd/demo/nginx
 
   destination:
