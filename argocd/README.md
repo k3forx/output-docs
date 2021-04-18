@@ -260,3 +260,7 @@ spec:
 ```
 
 Create the application with `kubectl` command.
+
+```bash
+> kubectl apply -f demo/nginx.yaml
+```
