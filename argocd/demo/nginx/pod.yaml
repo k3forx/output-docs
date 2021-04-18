@@ -4,5 +4,5 @@ metadata:
   name: nginx
 spec:
   containers:
-  - name: nginx
-    image: nginx:alpine
+    - name: nginx
+      image: nginx:alpine
