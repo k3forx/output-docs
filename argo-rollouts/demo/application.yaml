@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: server-nginx
+  namespace: argocd
+spec:
+  project: server
+
+  source:
+    repoURL: https://github.com/k3forx/output-docs
+    targetRevision: main
+    path: argo-rollouts/demo/nginx
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: server
