@@ -5,8 +5,11 @@ metadata:
   labels:
     team: frontend
 spec:
+  namespaceSelector:
+    matchNames:
+      - test
   selector:
     matchLabels:
       app: example-app
   endpoints:
-    - port: web
+    - targetPort: 8080

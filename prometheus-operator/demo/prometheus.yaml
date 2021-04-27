@@ -6,6 +6,9 @@ metadata:
     prometheus: prometheus
 spec:
   serviceAccountName: prometheus
+  serviceMonitorNamespaceSelector:
+    matchLabels:
+      role: monitoring
   serviceMonitorSelector:
     matchLabels:
       team: frontend
