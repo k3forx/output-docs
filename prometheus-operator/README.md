@@ -4,6 +4,9 @@ The Prometheus Operator for Kubernetes provides easy monitoring definitions for 
 
 # Demo
 
+In this demonstration, you can see how Prometheus operator works in the real situation.
+You deploy an application with deployment and expose it with service of `ClusterIP` type in `test` namespace. Prometheus operator is deployed in `monitoring` namespace and Prometheus monitors the application through service monitor.
+
 ## Start up Kubernetes cluster with minikube
 
 ```bash
@@ -13,7 +16,7 @@ minikube start --extra-config=kubelet.authentication-token-webhook=true --extra-
 ## Install CRDs
 
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheus-operator/master/bundle.yaml
+kubectl apply -k .
 ```
 
 ## Deploy sample applications and their service
@@ -21,14 +24,29 @@ kubectl apply -f https://raw.githubusercontent.com/prometheus-operator/prometheu
 Deploy k8s resources as an example.
 
 ```bash
-kubectl apply -f demo/deployment.yaml
+kubectl create ns test
 
-kubectl apply -f demo/service
+kubectl apply -f demo/deployment.yaml -n test
+
+kubectl apply -f demo/service -n test
+
+kubectl get all -n test
+```
+
+## Create `monitoring` namespace for Prometheus operator
+
+```bash
+kubectl apply -f monitoring-namespace.yaml
 ```
 
 ## Deploy service monitor
 
-Create a service monitor to monitor the service will the label (`app`: `example-app`) and the port `web`.
+Create a service monitor to monitor the service will the label (`app`: `example-app`).
+The section `endpoints` in `spec` section defines a scrapeable endpoint serving Prometheus metrics. This endpoints should be the same as endpoints of service.
+
+You can refer to the details in the following documentation.
+
+- https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#endpoint
 
 The YAML file is like
 
@@ -40,17 +58,20 @@ metadata:
   labels:
     team: frontend
 spec:
+  namespaceSelector:
+    matchNames:
+      - test
   selector:
     matchLabels:
       app: example-app
   endpoints:
-  - port: web
+    - targetPort: 8080
 ```
 
 Apply the file with `kubectl`.
 
 ```bash
-kubectl apply -f demo/service-monitor.yaml
+kubectl apply -f demo/service-monitor.yaml -n monitoring
 ```
 
 ## Create RBAC for Prometheus operator
@@ -64,31 +85,32 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: prometheus
+  namespace: monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
   name: prometheus
 rules:
-- apiGroups: [""]
-  resources:
-  - nodes
-  - nodes/metrics
-  - services
-  - endpoints
-  - pods
-  verbs: ["get", "list", "watch"]
-- apiGroups: [""]
-  resources:
-  - configmaps
-  verbs: ["get"]
-- apiGroups:
-  - networking.k8s.io
-  resources:
-  - ingresses
-  verbs: ["get", "list", "watch"]
-- nonResourceURLs: ["/metrics"]
-  verbs: ["get"]
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - nodes/metrics
+      - services
+      - endpoints
+      - pods
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs: ["get"]
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs: ["get", "list", "watch"]
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -99,15 +121,15 @@ roleRef:
   kind: ClusterRole
   name: prometheus
 subjects:
-- kind: ServiceAccount
-  name: prometheus
-  namespace: default
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: monitoring
 ```
 
 Apply the file.
 
 ```bash
-kubectl apply -f demo/rbac.yaml
+kubectl apply -f demo/rbac.yaml -n monitoring
 ```
 
 ## Include the service monitor in Prometheus
@@ -138,7 +160,7 @@ spec:
 Apply the YAML.
 
 ```bash
-kubectl apply -f demo/service-monitors.yaml
+kubectl apply -f demo/prometheus.yaml -n monitoring
 ```
 
 ## Check the status of the applications on UI
@@ -146,9 +168,9 @@ kubectl apply -f demo/service-monitors.yaml
 Let's expose Prometheus with service and see the status of the applications.
 
 ```bash
-kubectl apply -f demo/prometheus-service.yaml
+kubectl apply -f demo/prometheus-service.yaml -n monitoring
 
-minikube service prometheus --url
+minikube service -n monitoring prometheus --url
 ```
 
 Visit the URL you got the above command.
