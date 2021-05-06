@@ -1,0 +1,10 @@
+apiVersion: databases.schemahero.io/v1alpha4
+kind: Database
+metadata:
+  name: airlinedb
+  namespace: schemahero-tutorial
+spec:
+  connection:
+    postgres:
+      uri:
+        value: postgres://airlinedb-user:password@postgresql-headless.schemahero-tutorial.svc.cluster.local:5432/airlinedb?sslmode=disable
