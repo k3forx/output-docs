@@ -276,3 +276,63 @@ With `curl` command,
   "instructor": "John"
 }
 ```
+
+### Handling request errors
+
+Let's change the application so that it can return an error. Add the following code before adding a new data.
+
+```python
+for course in course_list:
+  if course['id'] == id:
+    raise Exception('Course with provided id already exists!')
+```
+
+If you send a request like below,
+
+```bash
+mutation {
+  createCourse(
+    courseId: "1"
+    title: "Python Lists"
+    instructor: "Jane Melody"
+  ) {
+    course {
+      courseId
+      title
+      instructor
+    }
+  }
+}
+```
+
+then you can get the following response.
+
+![image](https://user-images.githubusercontent.com/45956169/117981827-60ff8680-b370-11eb-83e0-1a9fc5593fca.png)
+
+Check it with `curl` command.
+
+```bash
+❯ curl -X POST http://localhost:8000/ -H "Content-Type: application/json" -d '{"query": "mutation { createCourse (courseId: \"1\"\n title: \"Golang\"\n instructor: \"John\") { course { courseId\n title\n instructor } } } "}' | jq -r
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   308  100   163  100   145  40750  36250 --:--:-- --:--:-- --:--:--  100k
+{
+  "data": {
+    "createCourse": null
+  },
+  "errors": [
+    {
+      "message": "Course with provided course_id already exists!",
+      "locations": [
+        {
+          "line": 1,
+          "column": 12
+        }
+      ],
+      "path": [
+        "createCourse"
+      ]
+    }
+  ]
+}
+```
