@@ -1,0 +1,3 @@
+[submodule "heroku/alpinehelloworld"]
+	path = heroku/alpinehelloworld
+	url = https://github.com/heroku/alpinehelloworld.git
