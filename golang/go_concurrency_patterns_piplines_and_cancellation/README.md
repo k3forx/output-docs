@@ -98,3 +98,57 @@ func merge(cs ...<-chan int) <-chan int {
 ```
 
 ## Stopping short
+
+私たちのパイプライン関数にはあるパターンがあります。
+
+- ステージは全ての送信操作が終了した時に、アウトバンドのチャネルを閉じます
+- ステージは、インバウンドのチャネルが閉じられるまで、それらから値を受け取り続けます
+
+このパターンはそれそれの受け取りステージが...し、全ての値がダウンストリームの送ることが成功したら全てのゴルーチンがexitすることを保証している。
+
+しかし、現実のパイプラインでは、ステージは全てのインバウンドの値を常に受け取るわけではない。時々、これは仕様による。受信用のゴルーチンは処理を行うために値の一部しか必要なかもしれない。より多くの場合、受信した値が以前のステージのエラーを表すため、ステージは早期に終了する。いずれのケースでも、受信チャネルは残りの値が届くのを待つ必要はなく、先のステージは後のステージが必要としない値を生成することを止めさせたい。
+
+私たちのパイプラインの例では、もしステージが全てのインバウンドの値を消費するのを失敗したら、それらの値を送ろうとしているゴルーチンは無限にブロックされるだろう。
+
+```golang
+    // Consume the first value from the output.
+    out := merge(c1, c2)
+    fmt.Println(<-out) // 4 or 9
+    return
+    // Since we didn't receive the second value from out,
+    // one of the output goroutines is hung attempting to send it.
+}
+```
+
+これはリソースリークである、ゴルーチンはメモリとランタイムリソースを消費し、ゴルーチンスタックのヒープリファレンスはデータをガベージコレクタされることから守る。ゴルーチンはガベージコレクタされない。
+
+下流のステージがすべてのインバウンド値を受信できなかった場合でも、パイプラインの上流ステージが終了するように手配する必要があります。これを実現する一つの方法は、送信チャンネルをバッファを持つように変更することです。バッファは一定数の値を保持することができます。バッファに余裕があれば、送信操作は直ちに完了します。
+
+```golang
+c := make(chan int, 2) // buffer size 2
+c <- 1  // succeeds immediately
+c <- 2  // succeeds immediately
+c <- 3  // blocks until another goroutine does <-c and receives 1
+```
+
+チャネルの作成時に送られる値の数が知られている時、バッファはコードをシンプルにすることができる。例えば、バッファされたチャネルに整数のリストをコピーし、新しいゴルーチンを生成することを避けるように `gen` 関数を変更することができる。
+
+```golang
+func gen(nums ...int) <-chan int {
+    out := make(chan int, len(nums))
+    for _, n := range nums {
+        out <- n
+    }
+    close(out)
+    return out
+}
+```
+
+パイプラインのブロックされたゴルーチンに戻る時、`merge` 関数によって返されるアウトバンドのチャネルにバッファを加えることを考えないといけないかもしれない。
+
+```golang
+func merge(cs ...<-chan int) <-chan int {
+    var wg sync.WaitGroup
+    out := make(chan int, 1) // enough space for the unread inputs
+    // ... the rest is unchanged ...
+```
