@@ -152,3 +152,7 @@ func merge(cs ...<-chan int) <-chan int {
     out := make(chan int, 1) // enough space for the unread inputs
     // ... the rest is unchanged ...
 ```
+
+## Explicit cancellation
+
+`main` が `out` からの全ての値を受け取ることなく終了することになった時、アップストリームのステージにあるごルーチンに、それらが送ろうとしている値を破棄することを伝えなければならない。
