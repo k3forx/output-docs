@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/k3forx/output-docs/golang/go_concurrency_patterns_context/google_web_search/pkg/google"
+	"github.com/k3forx/output-docs/golang/go_concurrency_patterns_context/google_web_search/pkg/userip"
 )
 
 // The server program issues Google search requests and demonstrates the use of
@@ -52,5 +55,45 @@ func handleSearch(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	fmt.Println(ctx)
+	// Store the user IP in ctx for use by code in other packages.
+	userIP, err := userip.FromRequest(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	ctx = userip.NewContext(ctx, userIP)
+
+	// Run the Google search and print the results.
+	start := time.Now()
+	results, err := google.Search(ctx, query)
+	elapsed := time.Since(start)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err := resultsTemplate.Execute(w, struct {
+		Results          google.Results
+		Timeout, Elapsed time.Duration
+	}{
+		Results: results,
+		Timeout: timeout,
+		Elapsed: elapsed,
+	}); err != nil {
+		log.Print(err)
+		return
+	}
 }
+
+var resultsTemplate = template.Must(template.New("results").Parse(`
+<html>
+<head/>
+<body>
+  <ol>
+  {{ range .Results }}
+    <li>{{ .Title }} - <a href="{{ .URL }}">{{ .URL }}</a></li>
+  {{ end }}
+  </ol>
+  <p>{{ len .Results }} results in {{ .Elapsed }}; timeout {{ .Timeout }}</p>
+</body>
+</html>
+`))

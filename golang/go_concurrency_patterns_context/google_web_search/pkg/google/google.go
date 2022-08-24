@@ -2,7 +2,10 @@ package google
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
+
+	"github.com/k3forx/output-docs/golang/go_concurrency_patterns_context/google_web_search/pkg/userip"
 )
 
 // Results is an ordered lit of search results.
@@ -26,11 +29,43 @@ func Search(ctx context.Context, query string) (Results, error) {
 	// If ctx is carrying the user IP address, forward it to the server.
 	// Google API use the user IP to distinguish server-initiated requests
 	// from end-user requests.
-	// if userIP, ok := userip.FromContext(ctx); ok {
-	// 	q.Set("userip", userIP.String())
-	// }
+	if userIP, ok := userip.FromContext(ctx); ok {
+		q.Set("userip", userIP.String())
+	}
+	req.URL.RawQuery = q.Encode()
 
-	return Results{}, nil
+	// Issue the HTTP request and handle the response. The httpDo function
+	// cancels the request if ctx.Done is closed.
+	var results Results
+	err = httpDo(ctx, req, func(resp *http.Response, err error) error {
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		// Parse the JSON search result.
+		// https://developers.google.com/web-search/docs/#fonje
+		var data struct {
+			ResponseData struct {
+				Results []struct {
+					TitleNoFormatting string
+					URL               string
+				}
+			}
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+			return err
+		}
+		for _, res := range data.ResponseData.Results {
+			results = append(results, Result{Title: res.TitleNoFormatting, URL: res.URL})
+		}
+
+		return nil
+	})
+
+	// httpDo waits for the closure we provided to return, so it's safe to
+	// read results here.
+	return results, err
 }
 
 // httpDo issues the HTTP request and calls f with the response. If ctx.Done is
