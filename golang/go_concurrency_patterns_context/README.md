@@ -45,3 +45,40 @@ type Context interface {
 // and as the top-level Context for incoming requests.
 func Background() Context
 ```
+
+`WithCancel` と `WithTimeout` は、親の `Context` より早くキャンセルされうる派生 `Context` の値を返します。リクエストのハンドラーが処理を終わった時、処理されるリクエストに紐づく `Context` は一般的にはキャンセルされる。`WithCancel` は、複数のレプリカを使っている時、無駄なリクエストをキャンセルするのに役に立つ。`WithTimeout` はバックエンドサーバーに対するリクエストに対してデッドラインを設定するのに役立つ。
+
+```golang
+// WithCancel returns a copy of parent whose Done channel is closed as soon as
+// parent.Done is closed or cancel is called.
+func WithCancel(parent Context) (ctx Context, cancel CancelFunc)
+
+// A CancelFunc cancels a Context.
+type CancelFunc func()
+
+// WithTimeout returns a copy of parent whose Done channel is closed as soon as
+// parent.Done is closed, cancel is called, or timeout elapses. The new
+// Context's Deadline is the sooner of now+timeout and the parent's deadline, if
+// any. If the timer is still running, the cancel function releases its
+// resources.
+func WithTimeout(parent Context, timeout time.Duration) (Context, CancelFunc)
+```
+
+`WithValue` は `Context` にリクエストに特有の値を紐づけるための方法を提供する。
+
+```golang
+// WithValue returns a copy of parent whose Value method returns val for key.
+func WithValue(parent Context, key interface{}, val interface{}) Context
+```
+
+## Example: Google Web Search
+
+### The server program
+
+### Package userip
+
+### Package google
+
+## Adapting code for Contexts
+
+## Conclusion
