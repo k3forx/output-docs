@@ -10,6 +10,8 @@
 | ドメインモデル | ドメインに含まれる概念を抽象化したもの | ラーメン、お店、購入者、トッピング | ドメインに含まれる概念の**抽象化** |
 | ドメインオブジェクト | ドメインモデルをコードに落とし込んだもの | | 値オブジェクトなど |
 
+## ユビキタス言語
+
 ## ドメインオブジェクトの種類
 
 ### 値オブジェクト
@@ -214,3 +216,70 @@ func main() {
 
 - オブジェクトを繰り返し利用するには、何らかのデータストアにオブジェクトを永続化する必要がある
 - リポジトリはデータを永続化し再構築するという処理を扱うためのオブジェクト
+
+```go
+func NewRamenShopRepository() RamenShopRepository {
+	// ...
+}
+
+type RamenShopRepository struct {}
+
+func (rsr RamenShopRepository) FindByName(name string) (RamenShop, err) {
+	// ...
+}
+
+func (rsr RamenShopRepository) Save(rs *RamenShop) error {
+	// ...
+}
+
+func NewRamenShopService(repo RamenShopRepository) RamenShopService {
+	// ...
+}
+
+type RamenShopService struct {
+	ramenShopRepo RamenShopRepository
+}
+
+func (us RamenShopService) IsDuplicatedWith(rs ramenShop) (bool, error) {
+	return us.ramenShopRepo.FindByName(rs.Name)
+}
+
+func main() {
+	ramenShopGaba := NewRamenShop("我馬")
+
+	ramenShopRepo := NewRamenShopRepository()
+	ramenShopService := NewRamenShopService(ramenShopRepo)
+	ok, err := ramenShopService.IsDuplicatedWith(ramenShopGaba)
+	if err != nil {
+		return
+	}
+	if !ok {
+		return
+	}
+
+	if err := repo.Save(&ramenShop); err != nil {
+		return
+	}
+}
+```
+
+- オブジェクトが保持するデータを変更するのであれば、オブジェクトに依頼する
+  - `RamenShopRepository` 構造体に `UpdateName` みたいなメソッドは定義しない
+  - ただ `Name` は公開されているフィールドなので、レポジトリ層で変更される可能性がある
+
+```go
+// DTO
+func NewRamenShopData(name string) RamenShopData {
+	return RamenShopData{name: name}
+}
+
+type RamenShopData struct {
+	name
+}
+
+func (rsd RamenShopData) Name() string {
+	return rsd.name
+}
+```
+
+- 引数をinterfaceにしてDIする
