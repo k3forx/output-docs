@@ -156,3 +156,61 @@ func main() {
 ### ドメインサービス
 
 - 値オブジェクトやエンティティに記述するのが不自然な振る舞いをドメインサービスに逃す
+  - ex. ラーメンショップの名前は重複が許されないというドメインルールがあるとすると、それはドメインサービスにおくと良さそう
+
+```go
+type RamenShop struct {
+	Name string
+}
+
+func (rs RamenShop) IsDuplicatedWith(rs RamenShop) bool {
+	// ...
+}
+
+func main() {
+	ramenShopGaba := NewRamenShop("我馬")
+	ramenShopGaba.IsDuplicatedWith(ramenShopGaba) // 生成したオブジェクト自身に問い合わせする？
+}
+```
+
+- ドメインサービスにロジックを逃す
+  - ドメインサービスは値オブジェクトやエンティティと異なり、地震の振る舞いを変更するようなインスタンス特有の状態を持たない
+  - **ドメインサービスの濫用はロジックの点在を促すので使う時は要注意**
+
+```go
+type UserService struct {}
+
+func (us UserService) IsDuplicatedWith(rs ramenShop) bool {
+	// ...
+}
+
+func main() {
+	ramenShopGaba := NewRamenShop("我馬")
+	UserService{}.IsDuplicatedWith(ramenShopGaba)
+}
+```
+
+### アプリケーションサービス
+
+- ラーメンショップの登録のコード
+
+```go
+type UserService struct {}
+
+func (us UserService) IsDuplicatedWith(rs ramenShop) bool {
+	// DBに問い合わせる
+}
+
+func main() {
+	ramenShopGaba := NewRamenShop("我馬")
+	if UserService{}.IsDuplicatedWith(ramenShopGaba) {
+		return 
+	}
+	// DBに永続化
+}
+```
+
+## リポジトリ
+
+- オブジェクトを繰り返し利用するには、何らかのデータストアにオブジェクトを永続化する必要がある
+- リポジトリはデータを永続化し再構築するという処理を扱うためのオブジェクト
