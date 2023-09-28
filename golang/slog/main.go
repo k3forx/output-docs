@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log/slog"
 	"os"
 )
@@ -22,4 +23,8 @@ func main() {
 	// NOTE: JSONHandlerを使う
 	logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	logger.Info("hello, world", "user", os.Getenv("USER"))
+
+	// NOTE: LogAttrsを使う
+	slog.LogAttrs(context.Background(), slog.LevelInfo, "hello, world",
+		slog.String("user", os.Getenv("USER")))
 }

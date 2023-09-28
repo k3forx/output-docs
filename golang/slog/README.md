@@ -80,6 +80,8 @@ logger.Info("hello, world", "user", os.Getenv("USER"))
 
 ---
 
+今まで見てきたkey-valueのsyntaxは便利だが、頻繁に実行されるログ文では `Attr` 型を使い、`LogAttrs` メソッドを使った方が効率的。これらはメモリ割り当てを最小にする。
+
 ## パフォーマンス
 
 ## 設計の過程
