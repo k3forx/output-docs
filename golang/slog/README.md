@@ -229,3 +229,26 @@ zapがよくインポートされているし (多くの人に支持されてい
 ### Know your use cases (使い道を知る)
 
 - zapのログでどれだけのkey-valueペアが呼ばれているか調べた
+  - **95%が5つ以下のkey-valueペア**を呼んでいた
+- 型についても調査した
+  - **8つのタイプでほぼ全ての型がカバーできる**
+  - slogも8つのタイプを定義していて、それ以外はanyとして扱われる
+
+### Write good benchmarks
+
+### Design the right API
+
+- logger creates a record and handler handle it
+
+```go
+type Handler interface {
+	// required
+	Handle(context.Context, Record) error
+	// optimizations
+	Enabled(context.Context, Level) bool
+	WithGroup(name string) Handler
+	WithAttrs(attrs []Attr) Handler
+}
+```
+
+### xxx
