@@ -251,4 +251,287 @@ type Handler interface {
 }
 ```
 
-### xxx
+#### Handler.Enabled
+
+- Many (most?) log lines are never output
+
+```golang
+logger.Debug("you will rarely care about this", "detail", info)
+```
+
+- Logger output methods call `Handler.Enabled` early
+
+```golang
+func (l *Logger) log(ctx context.Context lv Level, msg string, args ...any) {
+	if !l.handler.Enabled(ctx, lv) {
+		return
+	}
+	...
+}
+```
+
+#### `Handler.WithAttrs` <- よく分からん
+
+- Log lines are build in pieces: Establish common attributes Output log many log lines
+
+```golang
+l2 := l1.With("request", r)
+```
+
+`Logger.With` calls `Handler.WithAttrs`
+  So the handler can format the attributes
+
+### Avoid allocation
+
+#### Heap Allocation
+
+- Relatively slow (相対的に遅い)
+- Creates garbage (ガーベージを生成する)
+- Decided by escape analysis
+  - Clever, but hard to predict
+  - `go build -gcflags=-m` shows what escapes
+  - Test with `testing.AllocsPerRun`
+
+#### Avoiding Allocation: Variadic Arguments
+
+サマリ
+- `...` の引数は関数の中でスライスとして扱われる
+- もしスライスがエスケープされないなら、そのメモリはstack上に置かれる
+
+- A variadic argument becomes a slice inside the function
+- Where does the memory of that slice come from?
+- If the slice doesn't escape, the compiler can put it on the stack
+
+```golang
+func sum(ns ...int) int {
+	s := 0
+	for _, n := range ns {
+		s += n
+	}
+	return s
+}
+```
+
+#### Direct vs. Indirect Calls
+
+- Direct calls to `sum` don't allocate
+- Indirect calls might
+- Accurate escape analysis needs the called function's code
+
+#### Variadic Arguments in `slog`
+
+- 具体的な型を返したり、メソッドを直接呼び出すことによってメモリのheap領域へのアロケーションを防いでいる
+
+```golang
+package slog
+
+type Logger struct {...}
+
+func New(h Handler) *Logger {...} // concrete type
+
+func (l *Logger) LogAttrs(ctx context.Context, l Level, msg string, _ ...Attrs) // variadic arg
+```
+
+```go
+logger := slog.New(nopHandler{})
+logger.LogAttrs(ctx, slog.LevelInfo, "msg", slog.Int("a", 1)) // direct call of LogAttrs method and 0 allocation for slog.Int()
+```
+
+#### Avoiding Allocation: Variadic Arguments
+
+- しかし、`LogAttrs` メソッドは間接的に `Enabled` メソッドを呼び出している
+
+```go
+func (l *Logger) LogAttrs(ctx context.Context, l Level, msg string, _ ...Attrs) {
+	// Indirect call (Handler is an interface)
+	if !l.handler.Enabled(ctx, l) {
+		return
+	}
+}
+```
+
+- No allocation even though `LogAttrs` starts with an indirect call.
+  - That call does not pass the variadic slice.
+- If `Logger` were an interface, the variadic slice would be heap-allocated.
+
+#### Avoiding Allocation: Pooled Buffers
+
+- Empty slice: repeated allocations and copies
+
+```go
+var out []byte // Perfectly fine most of the time!
+out = append(out, message...)
+out = append(out, more...)
+...
+```
+
+- Initial capacity avoids copying
+
+```go
+out := make([]byte, 0, 1024)
+out = append(out, message...)
+out = append(out, more...)
+...
+```
+
+- Use a `sync.Pool` to avoid allocation (後で読む)
+  - https://github.com/golang/example/blob/master/slog-handler-guide/README.md#speed
+
+#### Avoiding Allocation: Passing Records
+
+- サマリ
+  - 値渡しとポインタ渡しでheapとstackのメモリアロケーションがどうなるか調べた方が良さそう
+
+- Records are passed to `Handler.Handle`
+- Indirect call: maybe heap allocation
+- So pass by value: `Handle(context.Context, Record) error`
+
+#### Avoiding Allocation: Record Attributes
+
+- サマリ
+  - うーん、、、ここら辺よく分からんな、
+
+- A `Record` holds a sequence of `Attrs`
+- We need a slice: there can be any number of `Attrs`
+- If we *only* used a slice, even one `Attrs` would allocate
+- `sync.Pool` won't help: we don't control the lifetime of a `Record`
+
+```go
+type Record struct {
+	...
+	attrs []Attr // Nothing wrong here unless speed is critical
+}
+```
+
+#### Avoiding Allocation: Record Attrs
+
+- So combine a slice with an array
+- What should `N` be?
+  - Too small: more allocation
+  - Too big: more copying
+
+```go
+type Record struct {
+	...
+	front  [N]Attr
+	nFront int
+	back   []Attr
+}
+```
+
+- `N` は5として設定されている、なぜなら、大体5つのkey-valueペアが呼び出されているから
+
+#### Avoiding Allocation: Attrs and Values
+
+```go
+type Attr struct {
+	Key string
+	Value Value
+}
+
+func String(key, value string) Attr {
+	return Attr{Key: key, Value: StringValue(value)}
+}
+```
+
+- Why `Value` instead of `any`?
+  - `Value` is bigger than an `any`, but allocates less often.
+
+
+- Goのany (空のinterface) の実装はdataへのポインターと型情報の2つの情報を持っている
+  - https://research.swtch.com/interfaces
+- Goのstringの実装は、byteデータへのポインタと長さの2つの情報を保持している
+  - https://research.swtch.com/godata
+
+- 以下のようにstringをanyで表そうとするとpointerへのpointerが生じる (2つのメモリアロケーション)
+  - `s` へのポインタは省くことができる (<- `Value` の実装)
+
+```go
+var s string = "hello"
+var a any = s
+```
+
+- `Value` の中身は以下のようになっている
+
+```go
+type Value struct {
+	any any
+	num uint64 // additional 8 bytes
+}
+
+func Int64Value(v int64) Value {
+	return Value{num: uint64(v), any: KindInt64} // small integers don't allocate, ヒープではstackに確保される
+}
+
+func Float64Value(v float64) Value {
+	return Value{num: math.Float64bits(v), any: KindFloat64}
+}
+```
+
+- なぜ、この整数(`Kind`)をanyに入れたときにメモリ割り当てが行われないのか？
+  - 小さな整数にはランタイムにビルトインのテーブルがあり、そのポインタが取得できる (heapへのアロケーションではない)
+
+- String Valuesの中身
+
+- もう一回動画見た方が良さそう
+
+```go
+type stringptr *byte
+
+func StringValue(value string) Value {
+	return Value{
+		num: uint64(lne(value)),
+		any: stringptr(unsafe.StringData(value)),
+	}
+}
+```
+
+## The Road to `slog`
+
+- Discussion: https://github.com/golang/go/discussions/54763
+- Proposal: https://github.com/golang/go/issues/56345
+
+### Highlights from the Discussion and Proposal
+
+- Why is this being proposed now?
+- Why not 5-8 years ago?
+
+### On Loggers in Contexts
+
+- over 100 packages do this just for Zap.
+
+```go
+// Add logger to context.
+func NewContext(context.Context, *Logger) context.Context
+
+// Get logger from context.
+func FromContext(context.Context) *Logger
+```
+
+- ↑のやり方には多くのコメントがあった
+  - 結局はAPIから削除された
+
+- 一例
+  - Shouldn't we make the dependencies explicit? **Isn't this logger smuggling bad practice?**
+  - **Having to fight antipatterns** being introduced to the codebase **is hard enough without the blessing of the std library** using context as a dependency container.
+  - **I disagree** with the claim **that carrying loggers in a context is an antipattern.** Logging is precisely the kind of cross-cutting concern where it makes sense to carry in a context.
+  - **W've successfully used loggers passed through contexts** and don't have any plans to stop doing that.
+
+### On Alternating Keys and Values
+
+- これは採用された
+
+```go
+slog.Info("msg", "k1", v1, "k2", v2)
+```
+
+- Logging does not need the **breakage** that key-value args allow.
+- I have only seen one person speak in favor of inlined key values, and many :+1 and comments discussing **disapproval** of inline key-values.
+- **Get rid of all convenience shortcuts.** If one wants convenience, they'd have to implement a wrapper on their own.
+- **attributes as keys and values from the bottom of my heart** (<- どっかから正式な文面をとってくる)
+
+
+- なぜ採用したか？
+  - You can also call `slog.Info` with `Attrs`.
+  - Other successful log packages use keys-and-values logr, hclog, go-kit/log
+  - Go should be light
