@@ -57,6 +57,7 @@ func TestUserRepositoryImpl_GetByID(t *testing.T) {
 			actual, err := impl.GetByID(ctx, c.id)
 			if err != nil {
 				t.Errorf("err should be nil, but got: %v", err)
+				return
 			}
 			if diff := cmp.Diff(c.expected, actual); diff != "" {
 				t.Errorf("result mismatch (-want +got):\n%s", diff)
