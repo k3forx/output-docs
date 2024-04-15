@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/k3forx/bun/pkg/db"
+	user_repository_impl "github.com/k3forx/bun/pkg/repository_impl/user"
 )
 
 func main() {
@@ -16,9 +17,11 @@ func main() {
 		panic(err)
 	}
 
-	var num int
-	if err := db.QueryRowContext(ctx, "SELECT 1").Scan(&num); err != nil {
-		log.Fatal(err)
+	userRepo := user_repository_impl.NewUserRepository(db)
+	user, err := userRepo.GetByID(ctx, 1)
+	if err != nil {
+		log.Printf("err: %+v\n", err)
+		return
 	}
-	fmt.Println(num)
+	fmt.Printf("user: %+v\n", user)
 }

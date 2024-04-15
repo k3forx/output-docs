@@ -25,7 +25,7 @@ func NewUserRepository(db *bun.DB) *userRepositoryImpl {
 func (impl *userRepositoryImpl) GetByID(ctx context.Context, id int64) (user_model.User, error) {
 	user := new(user_entity.User)
 	if err := impl.db.NewSelect().Model(user).Where("id = ?", id).Scan(ctx); err != nil {
-		return user_model.User{}, repository_impl.NewRepositoryError(err)
+		return user.Model(), repository_impl.NewRepositoryError(err)
 	}
 	return user.Model(), nil
 }

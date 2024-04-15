@@ -41,7 +41,8 @@ func TestUserRepositoryImpl_GetByID(t *testing.T) {
 		"id=1の場合はID=1のユーザーを取得する": {
 			id: 1,
 			expected: user_model.User{
-				ID: 1,
+				ID:   1,
+				Name: "John Smith",
 			},
 		},
 		"存在しないIDなので空の構造体が返ってくる": {
