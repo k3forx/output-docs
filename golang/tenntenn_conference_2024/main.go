@@ -6,6 +6,10 @@ import (
 	"slices"
 )
 
+// 型エイリアスに型パラメタをつけられる
+// いつ使うんや？
+type IndexSeq[V any] iter.Seq[V]
+
 func main() {
 	// pointerに変換する
 	ptr := Ptr[bool](false)
