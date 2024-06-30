@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"iter"
+	"slices"
+)
 
 func main() {
 	// pointerに変換する
@@ -37,6 +41,16 @@ func main() {
 		if c == 'C' {
 			break
 		}
+	}
+
+	println()
+
+	// Map関数をイテレータを使って書き直す
+	seq := MapByIterator(slices.All([]int{10, 20}), func(i, v int) string {
+		return fmt.Sprintf("0x%x", v)
+	})
+	for i, v := range seq {
+		fmt.Println(i, v)
 	}
 }
 
@@ -84,6 +98,16 @@ func Alphabet(yield func(rune) bool) {
 	for c := 'A'; c <= 'Z'; c++ {
 		if !yield(c) {
 			return
+		}
+	}
+}
+
+func MapByIterator[T1, T2 any](seq iter.Seq2[int, T1], f func(i int, v T1) T2) iter.Seq2[int, T2] {
+	return func(yield func(int, T2) bool) {
+		for i, v := range seq {
+			if !yield(i, f(i, v)) {
+				return
+			}
 		}
 	}
 }
