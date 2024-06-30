@@ -30,6 +30,14 @@ func main() {
 	// 任意の2つの型のフィールドXとYを持つ構造体のポインタを返す
 	var t *Tuple[int, string] = New(10, "apple")
 	fmt.Println(t.X, t.Y)
+
+	// イテレータ
+	for c := range Alphabet {
+		fmt.Printf("%c", c)
+		if c == 'C' {
+			break
+		}
+	}
 }
 
 func Ptr[T any](v T) *T {
@@ -69,5 +77,13 @@ func New[T1, T2 any](t1 T1, t2 T2) *Tuple[T1, T2] {
 	return &Tuple[T1, T2]{
 		X: t1,
 		Y: t2,
+	}
+}
+
+func Alphabet(yield func(rune) bool) {
+	for c := 'A'; c <= 'Z'; c++ {
+		if !yield(c) {
+			return
+		}
 	}
 }
