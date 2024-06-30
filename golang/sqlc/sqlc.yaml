@@ -1,0 +1,10 @@
+version: "2"
+
+sql:
+  - engine: "mysql"
+    queries: "query.sql"
+    schema: "./schema/*.up.sql" 
+    gen:
+      go:
+        package: "tutorial"
+        out: "tutorial"

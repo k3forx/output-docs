@@ -1,0 +1,5 @@
+- model: User
+  rows:
+    - id: 1
+      name: John Smith
+      email: john@smith.com

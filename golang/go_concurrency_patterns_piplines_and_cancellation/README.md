@@ -155,4 +155,24 @@ func merge(cs ...<-chan int) <-chan int {
 
 ## Explicit cancellation
 
-`main` が `out` からの全ての値を受け取ることなく終了することになった時、アップストリームのステージにあるごルーチンに、それらが送ろうとしている値を破棄することを伝えなければならない。
+`main` が `out` からの全ての値を受け取ることなく終了することになった時、アップストリームのステージにあるごルーチンに、それらが送ろうとしている値を破棄することを伝えなければならない。それは `done` と呼ばれるチャネルに値を送ることで可能である。
+
+```golang
+func main() {
+    in := gen(2, 3)
+
+    // Distribute the sq work across two goroutines that both read from in.
+    c1 := sq(in)
+    c2 := sq(in)
+
+    // Consume the first value from output.
+    done := make(chan struct{}, 2)
+    out := merge(done, c1, c2)
+    fmt.Println(<-out) // 4 or 9
+
+    // Tell the remaining senders we're leaving.
+    done <- struct{}{}
+    done <- struct{}{}
+}
+```
+
