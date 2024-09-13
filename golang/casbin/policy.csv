@@ -1,0 +1,6 @@
+p, admin, file1, read
+p, admin, file2, read
+p, admin, file3, read
+p, Aさん, file4, read
+g, Bさん, file5, read
+g, Aさん, admin
