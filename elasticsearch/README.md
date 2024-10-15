@@ -114,9 +114,9 @@ GET /_cat/indies?v&expand_wildcards=all # systemのindexの確認
   - primaryとそうでないレプリカシャードはnodeに分散されて置かれる
     - nodeが1つしかない場合、レプリカシャードの置き場所がないためクラスタのステータスがyellowになる
 
-    ![alt text](image-1.png)
+    ![alt text](./udemyguide/images/image-1.png)
 
-    ![alt text](image-2.png)
+    ![alt text](./udemyguide/images/image-2.png)
 
 - Choosing the number of replica shards
   - ユースケースによる
@@ -127,6 +127,36 @@ GET /_cat/indies?v&expand_wildcards=all # systemのindexの確認
 - Increasing query throughput with replication
   - レプリカシャードは複数のリクエストに同時に答えることができる
 
+### 17. Adding more nodes to the cluster
+
+### 18. Overview of node roles
+
+- Master-eligible
+  - マスターのーど: インデックスを作成したり削除する
+
+- Data
+  - データを保存するnode
+  - マスターノードと区別するために作られる
+
+- Ingest
+  - Ingest pipelineを実行するためのノード
+  - ドキュメントをindexする際に、実行される幾つかのステップ (データの処理) のことをIngest pipelineという
+  - ES内にある簡易的なLogstashのようなもの
+
+- Machine learning
+
+- Coordination
+  - クエリを分散させて、結果を集めるためのノード？
+
+- When to change node roles?
+  - 状況による！
+  - 大きいクラスタでは便利かも
+
+- こんな感じでnodeの情報が取れる
+  ![alt text](./udemyguide/images/image-4.png)
+
 ## 3. Managing Documents
+
+### 20. Creating & deleting indices
 
 ## 4. Mapping & Analysis

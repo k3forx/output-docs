@@ -16,7 +16,7 @@ func initLogger() {
 		AddSource: true,
 		Level:     slog.LevelInfo,
 	}
-	logger = slog.New(slog.NewTextHandler(os.Stdout, &opts))
+	logger = slog.New(slog.NewJSONHandler(os.Stdout, &opts))
 }
 
 func main() {
