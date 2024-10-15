@@ -13,4 +13,5 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to create elasticsearch client: %v", err)
 	}
+
 }
