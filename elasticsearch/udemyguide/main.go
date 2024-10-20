@@ -75,4 +75,8 @@ func main() {
 	}
 
 	document.IndexDocument(ctx)
+
+	document.RetrieveDocument(ctx)
+
+	document.UpdateDocument(ctx)
 }
