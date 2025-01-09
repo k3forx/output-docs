@@ -1,23 +1,26 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, View } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
 import { ListItem } from './components/ListItem';
+import articles from './dummies/articles.json';
 
 export default function App() {
-  const sampleText = "Hogehogeafkljlfjalsjdflaskjdflajsfl asdflkjasldfjal asdlfj lasjf lal jasfljwoiej onbaoeghoavn:ao ij aovnaoig awno aaoi nowij oiaoij:o j jaoj a:oeija :oijaw:ie fjaw:ojf:oawifj:sovjaojf"
+  const items = articles.map((article, index) => {
+    return (
+      <ListItem
+        key={index.toString()}
+        imageUrl={article.urlToImage}
+        title={article.title}
+        author={article.author}
+      />
+    )
+  })
   return (
-    <View style={styles.container}>
-      <ListItem
-        imageUrl={"https://picsum.photos/id/10/300/300"}
-        title="hogehoge"
-        author="React News"
-      />
-      <ListItem
-        imageUrl={"https://picsum.photos/id/20/300/300"}
-        title="fugafuga"
-        author="Japan News"
-      />
+    <SafeAreaView style={styles.container}>
+      <ScrollView>
+        {items}
+      </ScrollView>
       <StatusBar style="auto" />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -25,7 +28,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#eee",
-    alignItems: "center",
-    justifyContent: "center",
   },
 });
