@@ -12,7 +12,6 @@ export default function App() {
 
   const fetchArticles = async () => {
     try {
-      console.log(url);
       const response = await axios.get(url)
       setArticles(response.data.articles)
     } catch (error) {
