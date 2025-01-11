@@ -15,3 +15,11 @@
 ```
 
 ![alt text](image.png)
+
+## Tips
+
+- スクロール
+  - `ScrollView`
+  - `FlatList`
+- 定数
+  - `npx expo install expo-constants`
