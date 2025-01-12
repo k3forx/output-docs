@@ -1,50 +1,56 @@
-import { StatusBar } from 'expo-status-bar';
-import { FlatList, SafeAreaView, StyleSheet } from 'react-native';
-import { ListItem } from './components/ListItem';
-import { useState, useEffect } from "react";
-import axios from "axios";
+import { HomeScreen } from './screens/HomeScreen';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { ArticleScreen } from './screens/ArticleScreen';
+import { ClipScreen } from './screens/ClipScreen';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { FontAwesome } from '@expo/vector-icons';
+import { store, persistor } from './store';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
 
-const url = `https://newsapi.org/v2/top-headlines?country=us&apiKey=hogehoge`;
+const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
 
-export default function App() {
-  // [stateの変数, stateを変更する関数] = useState(初期値)
-  const [articles, setArticles] = useState([]);
-
-  const fetchArticles = async () => {
-    try {
-      const response = await axios.get(url)
-      setArticles(response.data.articles)
-    } catch (error) {
-      console.error(error);
+const screenOption = ({ route }) => ({
+  tabBarIcon: ({ color, size }) => {
+    if (route.name === "HomeTab") {
+      return <FontAwesome name="home" size={size} color={color} />;
+    } else if (route.name === "ClipTab") {
+      return <FontAwesome name="bookmark" size={size} color={color} />
     }
   }
+});
 
-  // useEffectの第2引数に空の配列を渡すと初回レンダリング時のみ実行される
-  useEffect(() => {
-    fetchArticles();
-  }, []);
-
+const HomeStack = () => {
   return (
-    <SafeAreaView style={styles.container}>
-      <FlatList
-        data={articles}
-        renderItem={({ item }) => (
-          <ListItem
-            imageUrl={item.urlToImage}
-            title={item.title}
-            author={item.author}
-          />
-        )}
-        keyExtractor={(_, index) => index.toString()}
-      />
-      <StatusBar style="auto" />
-    </SafeAreaView>
-  );
+    <Stack.Navigator>
+      <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }}></Stack.Screen>
+      <Stack.Screen name="Article" component={ArticleScreen}></Stack.Screen>
+    </Stack.Navigator>
+  )
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#eee",
-  },
-});
+const ClipStack = () => {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Clip" component={ClipScreen} options={{ headerShown: false }}></Stack.Screen>
+      <Stack.Screen name="Article" component={ArticleScreen}></Stack.Screen>
+    </Stack.Navigator>
+  )
+}
+
+export default function App() {
+  return (
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        <NavigationContainer>
+          <Tab.Navigator screenOptions={screenOption}>
+            <Tab.Screen name="HomeTab" component={HomeStack} options={{ headerShown: false, title: "Home" }}></Tab.Screen>
+            <Tab.Screen name="ClipTab" component={ClipStack} options={{ headerShown: false, title: "Clip" }}></Tab.Screen>
+          </Tab.Navigator>
+        </NavigationContainer>
+      </PersistGate>
+    </Provider>
+  )
+}
