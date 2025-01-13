@@ -12,7 +12,7 @@ export const userSlice = createSlice({
     deleteClip: (state, action) => {
       state.clips = state.clips.filter((clip) => clip.url !== action.payload.url);
     },
-  }
+  },
 });
 
 export const { addClip, deleteClip } = userSlice.actions;

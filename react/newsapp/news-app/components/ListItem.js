@@ -1,7 +1,7 @@
-import { StyleSheet, Image, View, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, Image, View, Text, TouchableOpacity } from "react-native";
 
 /**
- * 
+ *
  * @param {
  *  imageUrl: 画像URL(string)
  *  title: タイトル(string)
@@ -9,16 +9,13 @@ import { StyleSheet, Image, View, Text, TouchableOpacity } from 'react-native';
  *  onPress: タップ時の処理
  * } props
  * @returns
-*/
+ */
 
 export const ListItem = (props) => {
   return (
     <TouchableOpacity style={styles.itemContainer} onPress={props.onPress}>
       <View style={styles.leftContainer}>
-        <Image
-          style={{ width: 100, height: 100 }}
-          source={{ uri: props.imageUrl }}
-        />
+        <Image style={{ width: 100, height: 100 }} source={{ uri: props.imageUrl }} />
       </View>
       <View style={styles.rightContainer}>
         <Text numberOfLines={3} style={styles.text}>
@@ -28,7 +25,7 @@ export const ListItem = (props) => {
       </View>
     </TouchableOpacity>
   );
-}
+};
 
 const styles = StyleSheet.create({
   itemContainer: {
@@ -52,5 +49,5 @@ const styles = StyleSheet.create({
   subText: {
     fontSize: 12,
     color: "gray",
-  }
+  },
 });

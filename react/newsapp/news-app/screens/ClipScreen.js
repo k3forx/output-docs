@@ -1,4 +1,4 @@
-import { SafeAreaView, StyleSheet, FlatList } from "react-native"
+import { SafeAreaView, StyleSheet, FlatList } from "react-native";
 import { useSelector } from "react-redux";
 import { ListItem } from "../components/ListItem";
 import { useNavigation } from "@react-navigation/native";
@@ -21,12 +21,12 @@ export const ClipScreen = () => {
         keyExtractor={(_, index) => index.toString()}
       />
     </SafeAreaView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#eee",
-  }
-})
+  },
+});

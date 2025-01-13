@@ -27,4 +27,4 @@
   - [Moving between screens](https://reactnavigation.org/docs/navigating)
   - [Passing parameters to routes](https://reactnavigation.org/docs/params/)
 - 状態管理
-  -  [Redux](https://redux.js.org/)
+  - [Redux](https://redux.js.org/)
