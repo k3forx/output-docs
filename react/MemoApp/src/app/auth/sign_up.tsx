@@ -7,18 +7,39 @@ import {
 } from "react-native"
 import { Button } from "../../components/Button"
 import { Link, router } from "expo-router"
+import { useState } from "react"
 
 const SignUp = () => {
   const handlePress = () => {
     // SignUp処理
     router.push("/memo/list")
   }
+
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+
   return (
     <View style={styles.container}>
       <View style={styles.inner}>
         <Text style={styles.title}>Sign Up</Text>
-        <TextInput style={styles.input} value="Email Address" />
-        <TextInput style={styles.input} value="Password" />
+        <TextInput
+          style={styles.input}
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          placeholder="メールアドレス"
+          textContentType="emailAddress"
+        />
+        <TextInput
+          style={styles.input}
+          value={password}
+          onChangeText={setPassword}
+          autoCapitalize="none"
+          secureTextEntry
+          placeholder="パスワード"
+          textContentType="password"
+        />
         <Button label="Submit" onPress={handlePress} />
         <View style={styles.footer}>
           <Text style={styles.footerText}>Already registered?</Text>

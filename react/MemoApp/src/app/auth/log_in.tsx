@@ -29,6 +29,7 @@ const LogIn = () => {
           autoCapitalize="none"
           keyboardType="email-address"
           placeholder="メールアドレス"
+          textContentType="emailAddress"
         />
         <TextInput
           style={styles.input}
@@ -37,6 +38,7 @@ const LogIn = () => {
           autoCapitalize="none"
           secureTextEntry
           placeholder="パスワード"
+          textContentType="password"
         />
 
         <Button label="Submit" onPress={handlePress} />
