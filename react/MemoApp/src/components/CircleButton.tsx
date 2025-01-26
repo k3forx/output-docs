@@ -1,9 +1,14 @@
-import { Text, StyleSheet, type ViewStyle, TouchableOpacity } from "react-native"
+import {
+  Text,
+  StyleSheet,
+  type ViewStyle,
+  TouchableOpacity
+} from "react-native"
 
 interface props {
-  children: JSX.Element
-  style?: ViewStyle
-  onPress?: () => void
+  children: JSX.Element;
+  style?: ViewStyle;
+  onPress?: () => void;
 }
 
 export const CircleButton = (props: props) => {

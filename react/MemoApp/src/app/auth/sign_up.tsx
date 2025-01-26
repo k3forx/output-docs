@@ -1,4 +1,10 @@
-import { View, Text, TextInput, StyleSheet, TouchableOpacity } from "react-native"
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity
+} from "react-native"
 import { Button } from "../../components/Button"
 import { Link, router } from "expo-router"
 

@@ -10,9 +10,9 @@ const CustomIcon = createIconSetFromIcoMoon(
 )
 
 interface props {
-  name: string
-  size: number
-  color: string
+  name: string;
+  size: number;
+  color: string;
 }
 
 export const Icon = (props: props) => {
@@ -23,7 +23,5 @@ export const Icon = (props: props) => {
   if (!fontLoaded) {
     return null
   }
-  return (
-    <CustomIcon name={name} size={size} color={color} />
-  )
+  return <CustomIcon name={name} size={size} color={color} />
 }

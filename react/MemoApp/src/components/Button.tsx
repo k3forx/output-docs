@@ -1,8 +1,8 @@
-import { Text, StyleSheet, TouchableOpacity } from 'react-native'
+import { Text, StyleSheet, TouchableOpacity } from "react-native"
 
 interface props {
-  label: string
-  onPress?: () => void
+  label: string;
+  onPress?: () => void;
 }
 
 export const Button = (props: props) => {
