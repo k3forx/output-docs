@@ -2,16 +2,16 @@ import {
   View,
   TextInput,
   StyleSheet,
-  KeyboardAvoidingView,
-} from "react-native";
-import { CircleButton } from "../../components/CircleButton";
-import { Icon } from "../../components/Icon";
-import { router } from "expo-router";
+  KeyboardAvoidingView
+} from "react-native"
+import { CircleButton } from "../../components/CircleButton"
+import { Icon } from "../../components/Icon"
+import { router } from "expo-router"
 
 const Create = () => {
   const handlePress = () => {
-    router.back();
-  };
+    router.back()
+  }
   return (
     <KeyboardAvoidingView behavior="height" style={styles.container}>
       <View style={styles.inputContainer}>
@@ -21,25 +21,25 @@ const Create = () => {
         <Icon name="check" size={40} color="#ffffff" />
       </CircleButton>
     </KeyboardAvoidingView>
-  );
-};
+  )
+}
 
-export default Create;
+export default Create
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#ffffff"
   },
   inputContainer: {
     flex: 1,
     paddingVertical: 32,
-    paddingHorizontal: 27,
+    paddingHorizontal: 27
   },
   input: {
     flex: 1,
     textAlignVertical: "top",
     fontSize: 16,
-    lineHeight: 24,
-  },
-});
+    lineHeight: 24
+  }
+})
